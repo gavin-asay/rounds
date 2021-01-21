@@ -12,10 +12,17 @@ const fillGrid = () => {
 	}
 
 	for (let i = 0; i < 37 * 10; i++) {
-		let gridItemEl = document.createElement('div');
+		let gridItemEl = document.createElement('input');
 		gridItemEl.className = 'grid-item';
+		gridItemEl.setAttribute('type', 'text');
+		gridItemEl.setAttribute('maxlength', '2');
 		subgridEl.appendChild(gridItemEl);
 	}
 };
 
 fillGrid();
+
+subgridEl.addEventListener('input', function (e) {
+	e.target.value = e.target.value.toUpperCase();
+	e.target.classList = `grid-item ${e.target.value}`;
+});

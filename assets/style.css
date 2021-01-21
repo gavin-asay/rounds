@@ -47,13 +47,88 @@ body {
 }
 
 .grid-item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 16px;
+    font-weight: bold;
     background-color: gray;
     border: 0.5px solid black;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    z-index: 2;
+
 }
 
-.grid-item p {
+.grid-item {
     text-align: center;
+}
+
+.grid-item input[type="text"] {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+}
+
+.S {
+    background-color: blue;
+    color: lightskyblue;
+}
+
+.A {
+    background-color: yellow;
+    color: black;
+}
+
+.R {
+    background-color: green;
+    color: white;
+}
+
+.SN {
+    background-color: teal;
+    color: white;
+}
+
+.ST {
+    background-color: teal;
+    color: white;
+}
+
+.SW {
+    background-color: teal;
+    color: white;
+}
+
+.NM {
+    background-color: black;
+    color: white;
+}
+
+.GT {
+    background-color: gray;
+    color: black;
+}
+
+.B, .EOS {
+    background-color: white;
+    color: black;
+}
+
+.D {
+    background-color: red;
+    color: white;
+}
+
+.M {
+    background-color: lightblue;
+    color: darkblue;
+}
+
+.I {
+    background-color: olivedrab;
+    color: white;
+}
+
+.V, .H, .AW {
+    background-color: purple;
+    color: white
 }
