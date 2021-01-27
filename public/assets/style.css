@@ -54,8 +54,17 @@ body {
     height: 100%;
     width: 100%;
     text-align: center;
-    z-index: 2;
+    outline: none;
+    box-sizing: border-box;
+}
 
+.grid-item:focus {
+    border: white 2px dotted;
+}
+
+.grid-item:invalid {
+    border: red 2px dotted;
+    background-color: linear-gradient(red white);
 }
 
 .grid-item {
@@ -104,7 +113,7 @@ body {
 }
 
 .GT {
-    background-color: gray;
+    background-color: beige;
     color: black;
 }
 
@@ -128,7 +137,7 @@ body {
     color: white;
 }
 
-.V, .H, .AW {
+.V, .H, .AW, .DT {
     background-color: purple;
     color: white
 }

@@ -1,6 +1,7 @@
 const gridContainerEl = document.querySelector('#grid-container');
 const subgridEl = document.querySelector('#subgrid');
 const shiftStart = dayjs().hour(22).minute(00);
+let studentCount = 10;
 console.log(shiftStart);
 
 const fillGrid = () => {
@@ -16,13 +17,27 @@ const fillGrid = () => {
 		gridItemEl.className = 'grid-item';
 		gridItemEl.setAttribute('type', 'text');
 		gridItemEl.setAttribute('maxlength', '2');
+		gridItemEl.setAttribute(
+			'pattern',
+			'[ABDHIMORSV]{1}|(SN)|(ST)|(SW)|(NM)|(GT)|(AW)|(ES)'
+		);
 		subgridEl.appendChild(gridItemEl);
 	}
 };
 
 fillGrid();
 
-subgridEl.addEventListener('input', function (e) {
-	e.target.value = e.target.value.toUpperCase();
-	e.target.classList = `grid-item ${e.target.value}`;
+subgridEl.addEventListener('change', function (e) {
+	console.log(e);
+	let box = e.target;
+	box.value = box.value.toUpperCase();
+
+	if (!box.validity.patternMismatch) {
+		box.classList = `grid-item ${box.value}`;
+	}
+});
+
+subgridEl.addEventListener('keydown', function (e) {
+	if (e.key === 'Backspace' && !e.target.value)
+		e.target.previousSibling.focus();
 });
