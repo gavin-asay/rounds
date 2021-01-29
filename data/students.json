@@ -1,0 +1,42 @@
+[
+    {
+        "firstName": "Clownshoes",
+        "lastName": "McGee",
+        "assignedHome": "Rainier",
+        "tempHome": "",
+        "bed": 1,
+        "absenceCode": "",
+        "highRiskCode": "",
+        "homeConernCode": ""
+    },
+    {
+        "firstName": "Robb",
+        "lastName": "Stark",
+        "assignedHome": "Timpanogos",
+        "tempHome": "Rainier",
+        "bed": 2,
+        "absenceCode": "",
+        "highRiskCode": "",
+        "homeConernCode": ""
+    },
+    {
+        "firstName": "Rickon",
+        "lastName": "Stark",
+        "assignedHome": "Rainier",
+        "tempHome": "",
+        "bed": 3,
+        "absenceCode": "V",
+        "highRiskCode": "",
+        "homeConernCode": ""
+    },
+    {
+        "firstName": "Bran",
+        "lastName": "Stark",
+        "assignedHome": "Rainier",
+        "tempHome": "",
+        "bed": 4,
+        "absenceCode": "",
+        "highRiskCode": "SH",
+        "homeConernCode": ""
+    }
+]
