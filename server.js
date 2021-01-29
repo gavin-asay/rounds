@@ -14,8 +14,11 @@ app.use(express.json());
 app.use(express.static('public'));
 
 app.get('/api/bedChart/:home', (req, res) => {
-	console.log(students);
-	return res.json(students); // .filter(v => v.tempHome === req.body.home
+	return res.json(
+		students.filter(
+			v => v.tempHome === req.params.home || v.assignedHome === req.params.home
+		)
+	);
 });
 
 app.listen(PORT, () => {
