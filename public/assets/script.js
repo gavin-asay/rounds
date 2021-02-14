@@ -1,10 +1,14 @@
 const gridContainerEl = document.querySelector('#grid-container');
 const subgridEl = document.querySelector('#subgrid');
 const inputModalEl = document.querySelector('#input-modal');
+const modalBodyEl = document.querySelector('.modal-body');
 const shiftStart = dayjs().hour(22).minute(00);
 let studentCount = 10;
 let chartData = [];
 let selectedFields = [];
+let recentlySelected = [];
+let keyInput = '';
+const validCodes = /^[ABDHIMORSV]{1}$|^(SN)$|^(ST)$|^(SW)$|^(NM)$|^(GT)$|^(AW)$|^(ES)$/;
 
 const prepGrid = () => {
 	let nameHeaderEl = document.createElement('div');
@@ -108,17 +112,46 @@ async function fetchBedChart() {
 // 	// if (e.key === 'Return')
 // });
 
-function renderInputModal() {
+function renderInputModal(e) {
 	if (!selectedFields.length) return;
-	selectedFields.sort((a, b) => a.offsetLeft - b.offsetLeft);
+	if (e.target) selectedFields.sort((a, b) => a.offsetLeft - b.offsetLeft);
 
 	inputModalEl.setAttribute('style', `top: ${selectedFields[selectedFields.length - 1].offsetTop - 50}px; left: ${selectedFields[selectedFields.length - 1].offsetLeft + 65}px`);
 	inputModalEl.className = 'visible';
 }
 
+let modalHide;
+
+function gridInputHandler(e, value = (e.key || e.target.textContent).toUpperCase()) {
+	window.clearTimeout(modalHide);
+	if (!value.match(validCodes)) return;
+
+	selectedFields.forEach(el => {
+		el.textContent = value;
+		el.classList = `grid-item selected ${value}`;
+	});
+	recentlySelected.forEach(el => {
+		el.textContent = value;
+		el.classList = `grid-item selected ${value}`;
+	});
+
+	if (selectedFields.length) recentlySelected = [...selectedFields];
+	selectedFields = [];
+
+	modalHide = setTimeout(() => {
+		recentlySelected.forEach(el => el.classList.remove('selected'));
+		inputModalEl.classList.remove('visible');
+	}, 2000);
+}
+
 function gridSelector(e) {
 	e.preventDefault();
 	if (e.buttons !== 1 || !e.target.classList.contains('grid-item')) return;
+	if (modalHide) {
+		window.clearTimeout(modalHide);
+		recentlySelected.forEach(el => el.classList.remove('selected'));
+		recentlySelected = [];
+	}
 
 	const { target } = e;
 	if (!selectedFields.includes(target)) selectedFields.push(target);
@@ -130,9 +163,28 @@ function gridSelector(e) {
 	selectedFields.forEach(el => el.classList.add('selected'));
 }
 
+function keydownHandler(e) {
+	if (!selectedFields.length && !recentlySelected.length) return;
+	if (e.metaKey || e.ctrlKey) return;
+
+	if (e.key.toUpperCase() === 'N') return gridInputHandler(e, 'NM');
+
+	if (keyInput.length === 0 && e.key.toUpperCase().match(validCodes)) keyInput += e.key.toUpperCase();
+	else if (keyInput.length === 1 && (keyInput + e.key.toUpperCase()).match(validCodes)) keyInput += e.key.toUpperCase();
+	else if (keyInput.length === 2 && e.key.toUpperCase().match(validCodes)) {
+		keyInput = '';
+		keyInput += e.key.toUpperCase();
+	}
+
+	window.clearTimeout(modalHide);
+	gridInputHandler(e, keyInput || undefined);
+}
+
 subgridEl.addEventListener('mouseover', gridSelector);
 subgridEl.addEventListener('mousedown', gridSelector);
 document.addEventListener('mouseup', renderInputModal);
+document.addEventListener('keydown', keydownHandler);
+modalBodyEl.addEventListener('click', gridInputHandler);
 
 prepGrid();
 fetchBedChart();

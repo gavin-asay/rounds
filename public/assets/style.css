@@ -117,6 +117,7 @@ div#subgrid {
 }
 
 #input-modal {
+    display: none;
     background-color: #777777;
     border-radius: 10px;
     color: white;
