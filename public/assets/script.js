@@ -3,12 +3,14 @@ const subgridEl = document.querySelector('#subgrid');
 const inputModalEl = document.querySelector('#input-modal');
 const modalBodyEl = document.querySelector('.modal-body');
 const shiftStart = dayjs().hour(22).minute(00);
+const shiftEnd = shiftStart.day() > 4 ? shiftStart.add(10, 'hour') : shiftStart.add(9, 'hour');
 let studentCount = 10;
 let chartData = [];
 let selectedFields = [];
 let recentlySelected = [];
 let keyInput = '';
-const validCodes = /^[ABDHIMORSV]{1}$|^(SN)$|^(ST)$|^(SW)$|^(NM)$|^(GT)$|^(AW)$|^(ES)$/;
+const validCodes = /^[ABDHIMORSV]{1}$|^SN$|^ST$|^SW$|^NM$|^GT$|^AW$|^ES$/;
+let deselectMode = false;
 
 const prepGrid = () => {
 	let nameHeaderEl = document.createElement('div');
@@ -48,9 +50,6 @@ const addStudentToChart = (student, i) => {
 	for (let j = 0; j < 37; j++) {
 		let gridItemEl = document.createElement('div');
 		gridItemEl.className = 'grid-item';
-		// gridItemEl.setAttribute('type', 'text');
-		// gridItemEl.setAttribute('maxlength', '2');
-		// gridItemEl.setAttribute('pattern', '[ABDHIMORSV]{1}|(SN)|(ST)|(SW)|(NM)|(GT)|(AW)|(ES)');
 		gridItemEl.setAttribute('data-row', i);
 		gridItemEl.setAttribute('data-student', `${student.firstName}${student.lastName}`.toLowerCase());
 		gridItemEl.setAttribute('data-column', j);
@@ -76,53 +75,24 @@ async function fetchBedChart() {
 	}
 }
 
-// subgridEl.addEventListener('change', function (e) {
-// 	let box = e.target;
-// 	box.value = box.value.toUpperCase();
-
-// 	if (!box.validity.patternMismatch) {
-// 		box.classList = `grid-item ${box.value}`;
-// 	} else return;
-
-// 	let student = box.getAttribute('data-student');
-// 	let timestamp = box.getAttribute('data-timestamp');
-
-// 	let postBody = {
-// 		student: student,
-// 		time: timestamp,
-// 		status: box.value,
-// 	};
-// 	console.log(postBody);
-
-// 	fetch('/api/bedChart', {
-// 		method: 'POST',
-// 		headers: {
-// 			Accept: 'application/json',
-// 			'Content-Type': 'application/json',
-// 		},
-// 		body: JSON.stringify(postBody),
-// 	}).then(res => {
-// 		if (res.status === 500) serverErrorHandler();
-// 	});
-// });
-
-// subgridEl.addEventListener('keydown', function (e) {
-// 	if (e.key === 'Backspace' && !e.target.value) e.target.previousSibling.focus();
-
-// 	// if (e.key === 'Return')
-// });
-
 function renderInputModal(e) {
-	if (!selectedFields.length) return;
-	if (e.target) selectedFields.sort((a, b) => a.offsetLeft - b.offsetLeft);
+	deselectMode = false;
+	if (!selectedFields.length) {
+		inputModalEl.className = '';
+		return;
+	}
 
-	inputModalEl.setAttribute('style', `top: ${selectedFields[selectedFields.length - 1].offsetTop - 50}px; left: ${selectedFields[selectedFields.length - 1].offsetLeft + 65}px`);
+	selectedFields.sort((a, b) => b.offsetLeft - a.offsetLeft);
+	const rect = selectedFields[0].getBoundingClientRect();
+	const left = window.innerWidth - rect.right < 350 ? selectedFields[0].offsetLeft - 165 : selectedFields[0].offsetLeft + 65;
+
+	inputModalEl.setAttribute('style', `top: ${selectedFields[0].offsetTop - 50}px; left: ${left}px`);
 	inputModalEl.className = 'visible';
 }
 
 let modalHide;
 
-function gridInputHandler(e, value = (e.key || e.target.textContent).toUpperCase()) {
+function gridInputHandler(e, value = e.key?.toUpperCase() || e.target.textContent) {
 	window.clearTimeout(modalHide);
 	if (!value.match(validCodes)) return;
 
@@ -144,9 +114,9 @@ function gridInputHandler(e, value = (e.key || e.target.textContent).toUpperCase
 	}, 2000);
 }
 
-function gridSelector(e) {
+function gridSelectorMouse(e) {
 	e.preventDefault();
-	if (e.buttons !== 1 || !e.target.classList.contains('grid-item')) return;
+	if ((e.buttons !== 1 && !e.touches) || !e.target.classList.contains('grid-item')) return;
 	if (modalHide) {
 		window.clearTimeout(modalHide);
 		recentlySelected.forEach(el => el.classList.remove('selected'));
@@ -154,13 +124,33 @@ function gridSelector(e) {
 	}
 
 	const { target } = e;
-	if (!selectedFields.includes(target)) selectedFields.push(target);
-	else {
+	if (target.classList.contains('selected') && deselectMode) {
 		target.classList.remove('selected');
 		selectedFields.splice(selectedFields.indexOf(target), 1);
+	} else if (!target.classList.contains('selected') && !deselectMode) {
+		selectedFields.push(target);
+		selectedFields.forEach(el => el.classList.add('selected'));
+	}
+}
+
+function gridSelectorTouch(e) {
+	e.preventDefault();
+	if (e.touches.length !== 1) return;
+
+	if (modalHide) {
+		window.clearTimeout(modalHide);
+		recentlySelected.forEach(el => el.classList.remove('selected'));
+		recentlySelected = [];
 	}
 
-	selectedFields.forEach(el => el.classList.add('selected'));
+	const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+	if (target.classList.contains('selected') && deselectMode) {
+		target.classList.remove('selected');
+		selectedFields.splice(selectedFields.indexOf(target), 1);
+	} else if (!target.classList.contains('selected') && !deselectMode) {
+		selectedFields.push(target);
+		selectedFields.forEach(el => el.classList.add('selected'));
+	}
 }
 
 function keydownHandler(e) {
@@ -180,11 +170,26 @@ function keydownHandler(e) {
 	gridInputHandler(e, keyInput || undefined);
 }
 
-subgridEl.addEventListener('mouseover', gridSelector);
-subgridEl.addEventListener('mousedown', gridSelector);
+function selectToggleMouse(e) {
+	e.preventDefault();
+	if (e.target.classList.contains('selected')) deselectMode = true;
+	gridSelectorMouse(e);
+}
+
+function selectToggleTouch(e) {
+	e.preventDefault();
+	if (document.elementsFromPoint(e.clientX, e.clientY)) deselectMode = true;
+	gridSelectorTouch(e);
+}
+
+subgridEl.addEventListener('mouseover', gridSelectorMouse);
+subgridEl.addEventListener('mousedown', selectToggleMouse);
 document.addEventListener('mouseup', renderInputModal);
 document.addEventListener('keydown', keydownHandler);
 modalBodyEl.addEventListener('click', gridInputHandler);
+subgridEl.addEventListener('touchstart', selectToggleMouse);
+subgridEl.addEventListener('touchmove', gridSelectorTouch);
+subgridEl.addEventListener('touchend', renderInputModal);
 
 prepGrid();
 fetchBedChart();

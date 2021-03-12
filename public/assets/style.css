@@ -124,8 +124,7 @@ div#subgrid {
     padding: 15px;
     width: max-content;
     position: absolute;
-    left: 0;
-    top: 0;
+    box-sizing: border-box;
 }
 
 #input-modal.visible {
