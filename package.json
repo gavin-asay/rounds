@@ -1,25 +1,25 @@
 {
-  "name": "sleep-logs",
-  "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gavin-asay/sleep-logs.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/gavin-asay/sleep-logs/issues"
-  },
-  "homepage": "https://github.com/gavin-asay/sleep-logs#readme",
-  "dependencies": {
-    "express": "^4.17.1",
-    "mysql2": "^2.2.5"
-  }
+	"name": "rounds",
+	"version": "1.0.0",
+	"description": "",
+	"main": "server.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node server.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gavin-asay/rounds.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/gavin-asay/rounds/issues"
+	},
+	"homepage": "https://github.com/gavin-asay/rounds#readme",
+	"dependencies": {
+		"express": "^4.17.1",
+		"mysql2": "^2.2.5"
+	}
 }
