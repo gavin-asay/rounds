@@ -4,7 +4,7 @@ const inputModalEl = document.querySelector('#input-modal');
 const modalBodyEl = document.querySelector('.modal-body');
 const shiftStart = dayjs().hour(22).minute(00);
 const shiftEnd = shiftStart.day() > 4 ? shiftStart.add(10, 'hour') : shiftStart.add(9, 'hour');
-let studentCount = 10;
+let unitCount = 10;
 let chartData = [];
 let selectedFields = [];
 let recentlySelected = [];
@@ -18,10 +18,10 @@ const prepGrid = () => {
 	nameHeaderEl.textContent = 'Name';
 	gridContainerEl.appendChild(nameHeaderEl);
 
-	let bedHeaderEl = document.createElement('div');
-	bedHeaderEl.classList = 'grid-label bed-header';
-	bedHeaderEl.textContent = 'Bed';
-	gridContainerEl.appendChild(bedHeaderEl);
+	let locationHeaderEl = document.createElement('div');
+	locationHeaderEl.classList = 'grid-label location-header';
+	locationHeaderEl.textContent = 'Location';
+	gridContainerEl.appendChild(locationHeaderEl);
 
 	for (let i = 0; i < 37; i++) {
 		let headerItemEl = document.createElement('div');
@@ -31,40 +31,40 @@ const prepGrid = () => {
 	}
 };
 
-const addStudentToChart = (student, i) => {
+const addUnitToChart = (unit, i) => {
 	let nameEl = document.createElement('div');
-	nameEl.textContent = `${student.firstName} ${student.lastName}`;
+	nameEl.textContent = `${unit.firstName} ${unit.lastName}`;
 	nameEl.classList = 'name';
 	nameEl.setAttribute('data-row', i);
-	nameEl.setAttribute('data-student', `${student.firstName}${student.lastName}`);
+	nameEl.setAttribute('data-unit', `${unit.firstName}${unit.lastName}`);
 
-	let bedEl = document.createElement('div');
-	bedEl.textContent = student.bed.toString();
-	bedEl.classList = 'bed';
+	let locationEl = document.createElement('div');
+	locationEl.textContent = unit.location.toString();
+	locationEl.classList = 'location';
 	nameEl.setAttribute('data-row', i);
-	nameEl.setAttribute('data-student', `${student.firstName}${student.lastName}`);
+	nameEl.setAttribute('data-unit', `${unit.firstName}${unit.lastName}`);
 
 	gridContainerEl.appendChild(nameEl);
-	gridContainerEl.appendChild(bedEl);
+	gridContainerEl.appendChild(locationEl);
 
 	for (let j = 0; j < 37; j++) {
 		let gridItemEl = document.createElement('div');
 		gridItemEl.className = 'grid-item';
 		gridItemEl.setAttribute('data-row', i);
-		gridItemEl.setAttribute('data-student', `${student.firstName}${student.lastName}`.toLowerCase());
+		gridItemEl.setAttribute('data-unit', `${unit.firstName}${unit.lastName}`.toLowerCase());
 		gridItemEl.setAttribute('data-column', j);
 		gridItemEl.setAttribute('data-timestamp', shiftStart.add(15 * j, 'minute').format('HHmm'));
 		subgridEl.appendChild(gridItemEl);
 	}
 };
 
-const fillGrid = studentList => {
-	studentList.forEach((student, i) => addStudentToChart(student, i));
+const fillGrid = unitList => {
+	unitList.forEach((unit, i) => addUnitToChart(unit, i));
 };
 
-async function fetchBedChart() {
+async function fetchLocationChart() {
 	try {
-		const queryUrl = '/api/bedchart/Rainier';
+		const queryUrl = '/api/locationchart/Rainier';
 		const res = await fetch(queryUrl);
 		console.log(res);
 		const data = await res.json();
@@ -84,7 +84,8 @@ function renderInputModal(e) {
 
 	selectedFields.sort((a, b) => b.offsetLeft - a.offsetLeft);
 	const rect = selectedFields[0].getBoundingClientRect();
-	const left = window.innerWidth - rect.right < 350 ? selectedFields[0].offsetLeft - 165 : selectedFields[0].offsetLeft + 65;
+	const left =
+		window.innerWidth - rect.right < 350 ? selectedFields[0].offsetLeft - 165 : selectedFields[0].offsetLeft + 65;
 
 	inputModalEl.setAttribute('style', `top: ${selectedFields[0].offsetTop - 50}px; left: ${left}px`);
 	inputModalEl.className = 'visible';
@@ -111,7 +112,7 @@ function gridInputHandler(e, value = e.key?.toUpperCase() || e.target.textConten
 	modalHide = setTimeout(() => {
 		recentlySelected.forEach(el => el.classList.remove('selected'));
 		inputModalEl.classList.remove('visible');
-	}, 2000);
+	}, 5000);
 }
 
 function gridSelectorMouse(e) {
@@ -134,8 +135,8 @@ function gridSelectorMouse(e) {
 }
 
 function gridSelectorTouch(e) {
-	e.preventDefault();
-	if (e.touches.length !== 1) return;
+	if (e.touches.length !== 1 || !e.target.classList.contains('grid-item')) return;
+	if (e.target.classList.contains('grid-item')) e.preventDefault();
 
 	if (modalHide) {
 		window.clearTimeout(modalHide);
@@ -177,8 +178,9 @@ function selectToggleMouse(e) {
 }
 
 function selectToggleTouch(e) {
+	if (!e.target.classList.contains('grid-item') || e.touches.length === 2) return;
 	e.preventDefault();
-	if (document.elementsFromPoint(e.clientX, e.clientY)) deselectMode = true;
+	if (document.elementsFromPoint(e.clientX, e.clientY).classList.contains('selected')) deselectMode = true;
 	gridSelectorTouch(e);
 }
 
@@ -187,9 +189,9 @@ subgridEl.addEventListener('mousedown', selectToggleMouse);
 document.addEventListener('mouseup', renderInputModal);
 document.addEventListener('keydown', keydownHandler);
 modalBodyEl.addEventListener('click', gridInputHandler);
-subgridEl.addEventListener('touchstart', selectToggleMouse);
+subgridEl.addEventListener('touchstart', selectToggleTouch);
 subgridEl.addEventListener('touchmove', gridSelectorTouch);
 subgridEl.addEventListener('touchend', renderInputModal);
 
 prepGrid();
-fetchBedChart();
+fetchLocationChart();

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const students = require('./data/students.json');
+const units = require('./data/students.json');
 const mysql2 = require('mysql2');
 
 const app = express();
@@ -14,26 +14,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-app.get('/api/bedChart/:home', (req, res) => {
-	let roster = students.filter(
-		v =>
-			v.tempHome === req.params.home ||
-			(v.assignedHome === req.params.home && !v.tempHome)
-	);
+app.get('/api/locationchart/:area', (req, res) => {
+	let roster = units.filter(v => v.tempHome === req.params.area || (v.assignedArea === req.params.area && !v.tempArea));
 
 	if (roster.length === 0) {
-		res.json({ message: 'No students on this home tonight' });
+		res.json({ message: 'No units in this area tonight' });
 		return;
 	}
 
 	res.json({
 		message: 'success',
-		studentCount: roster.length,
+		unitCount: roster.length,
 		roster: roster,
 	});
 });
 
-app.post('/api/bedChart', (req, res) => {
+app.post('/api/locationchart', (req, res) => {
 	console.log(req.body);
 });
 
