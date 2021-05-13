@@ -15,3 +15,7 @@ This is a work in progress, with the front-end mostly built in native JavaScript
 To make data input as quick and easy as possible, a user can select one or many cells and populate all of them with a single button press or keystroke. A modal will pop up when cells are selected, allowing quick selection of data values common to your organization's processes. The modal and cell selection persist for a few seconds afterward, allowing for quick corrections.
 
 Because you won't need the depth and breadth of tools that come with software like Excel or Google Sheets, the UI is much simpler. In addition, the streamlined functionality makes Rounds a much faster, less resource-intensive app, thus saving battery life.
+
+## Deployed Preview
+
+Preview the app at https://desolate-castle-27716.herokuapp.com/. (The app may be sleeping, thank you for your patience.)
