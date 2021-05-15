@@ -16,6 +16,10 @@ To make data input as quick and easy as possible, a user can select one or many 
 
 Because you won't need the depth and breadth of tools that come with software like Excel or Google Sheets, the UI is much simpler. In addition, the streamlined functionality makes Rounds a much faster, less resource-intensive app, thus saving battery life.
 
+## Usage
+
+Test the current build at the deploy link below, or clone the repository to run the app locally. Although the backend is still in its nascence, you'll need to run `npm start` from the root directory, then view localhost:3002/ in your browser.
+
 ## Deployed Preview
 
 Preview the app at https://desolate-castle-27716.herokuapp.com/. (The app may be sleeping, thank you for your patience.)
