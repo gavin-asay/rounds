@@ -19,3 +19,5 @@ Because you won't need the depth and breadth of tools that come with software li
 ## Deployed Preview
 
 Preview the app at https://desolate-castle-27716.herokuapp.com/. (The app may be sleeping, thank you for your patience.)
+
+![Preview of Rounds](./rounds.png)
