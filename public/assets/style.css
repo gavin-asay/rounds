@@ -80,7 +80,7 @@ div#subgrid {
     position: relative;
 }
 
-.grid-item {
+.grid-item, .selector {
     font-size: 16px;
     font-weight: bold;
     background-color: #282828;
@@ -97,7 +97,7 @@ div#subgrid {
     border-radius: 5px;
 }
 
-.grid-item:focus {
+.grid-item:hover {
     border: white 2px dotted;
 }
 

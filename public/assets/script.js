@@ -76,6 +76,7 @@ async function fetchLocationChart() {
 }
 
 function renderInputModal(e) {
+	if (inputModalEl.className === 'visible') return;
 	deselectMode = false;
 	if (!selectedFields.length) {
 		inputModalEl.className = '';
@@ -94,7 +95,7 @@ function renderInputModal(e) {
 let modalHide;
 
 function gridInputHandler(e, value = e.key?.toUpperCase() || e.target.textContent) {
-	window.clearTimeout(modalHide);
+	if (modalHide) window.clearTimeout(modalHide);
 	if (!value.match(validCodes)) return;
 
 	selectedFields.forEach(el => {
@@ -145,6 +146,7 @@ function gridSelectorTouch(e) {
 	}
 
 	const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+	if (!target.classList.includes('grid-item')) return;
 	if (target.classList.contains('selected') && deselectMode) {
 		target.classList.remove('selected');
 		selectedFields.splice(selectedFields.indexOf(target), 1);
