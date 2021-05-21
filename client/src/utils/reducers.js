@@ -1,11 +1,23 @@
 import { createSlice } from '@reduxjs/toolkit';
-import dayjs from 'dayjs';
 
 export const configSlice = createSlice({
 	name: 'config',
 	initialState: {
-		shiftStart: dayjs().hour(22).minute(0),
-		shiftEnd: dayjs().hour(7).minute(0),
+		shiftStart: '2200',
+		shiftEnd: '0700',
+		area: null,
 	},
-	reducers: {},
+	reducers: {
+		setShift: (state, action) => {
+			state.shiftStart = action.payload.shiftStart || state.shiftStart;
+			state.shiftEnd = action.payload.shiftEnd || state.shiftEnd;
+		},
+		setArea: (state, action) => {
+			state.area = action.payload;
+		},
+	},
 });
+
+export const { setShift, setArea } = configSlice.actions;
+
+export default configSlice.reducer;
