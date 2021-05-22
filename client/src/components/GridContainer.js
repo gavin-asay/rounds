@@ -1,5 +1,6 @@
 import React from 'react';
 import Subgrid from './Subgrid';
+import NameList from './NameList';
 import styled from 'styled-components';
 
 const Container = styled.div`
@@ -12,7 +13,7 @@ const Container = styled.div`
 
 	& > div {
 		border: 0.5px solid white;
-		/* display: flex; */
+		display: flex;
 		justify-content: center;
 		align-items: center;
 		box-sizing: border-box;
@@ -38,6 +39,7 @@ function GridContainer() {
 			<GridLabel>Name</GridLabel>
 			<GridLabel location>Location</GridLabel>
 			<Subgrid />
+			<NameList />
 		</Container>
 	);
 }
