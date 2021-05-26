@@ -3,11 +3,11 @@ import Header from './components/Header';
 import GridContainer from './components/GridContainer';
 
 import { Provider } from 'react-redux';
-import config from './utils/globalState';
+import store from './utils/globalState';
 
 function App() {
 	return (
-		<Provider store={config}>
+		<Provider store={store}>
 			<Header />
 			<main>
 				<GridContainer />
