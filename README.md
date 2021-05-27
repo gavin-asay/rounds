@@ -2,7 +2,7 @@
 
 Inspired by jobs with regular data recording requirements and the pain of editing spreadsheets on a phone, Rounds is a web application for tracking data at frequent intervals with a focus on mobile-friendly UI that minimizes poking at too-small cells and squinting at tiny font sizes.
 
-This is a work in progress, with the front-end mostly built in native JavaScript. Currently, most of the event handlers for simplified "spreadsheet-lite" functionality are in place. Aims for future development include:
+This is a work in progress, with the front-end mostly built React/Redux. Currently, most of the event handlers for simplified "spreadsheet-lite" functionality are in place. Aims for future development include:
 
 - MongoDB for data storage
 - Node.js backend
@@ -22,6 +22,6 @@ Test the current build at the deploy link below, or clone the repository to run 
 
 ## Deployed Preview
 
-Preview the app at https://desolate-castle-27716.herokuapp.com/. (The app may be sleeping, thank you for your patience.)
+Preview the app at https://gavin-asay.github.io/rounds/.
 
 ![Preview of Rounds](./rounds.png)
