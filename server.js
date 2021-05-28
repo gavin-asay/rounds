@@ -15,10 +15,10 @@ app.use(express.json());
 app.use(express.static('public'));
 
 app.get('/api/locationchart/:area', (req, res) => {
-	let roster = units.filter(v => v.tempHome === req.params.area || (v.assignedArea === req.params.area && !v.tempArea));
+	let roster = units;
 
 	if (roster.length === 0) {
-		res.json({ message: 'No units in this area tonight' });
+		res.json({ message: 'No units in this area' });
 		return;
 	}
 

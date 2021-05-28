@@ -3,42 +3,11 @@ import styled from 'styled-components';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { updateData } from '../utils/unitReducer';
-import { updateSelectedCells, toggleModal } from '../utils/gridReducer';
+import { updateSelectedCells, shiftToRecent, updateRecentlySelected, toggleModal } from '../utils/gridReducer';
 
-function modalColor(props) {
-	switch (props.value) {
-		case 'S':
-			return `lightskyblue`;
-		case 'A':
-			return `yellow`;
-		case 'R':
-			return `lightgreen`;
-		case 'SN':
-		case 'ST':
-		case 'SW':
-			return `rgb(0, 230, 230)`;
-		case 'NM':
-			return `white`;
-		case 'GT':
-			return `beige`;
-		case 'B':
-		case 'ES':
-			return `white`;
-		case 'D':
-			return `red`;
-		case 'M':
-			return `lightgray`;
-		case 'I':
-			return `rgb(173, 230, 61)`;
-		case 'V':
-		case 'H':
-		case 'AW':
-		case 'DT':
-			return 'white';
-		default:
-			return 'white';
-	}
-}
+import dayjs from 'dayjs';
+
+import { modalColor } from '../utils/helpers';
 
 const ModalFrame = styled.div`
 	display: ${props => (props.modalVisible ? 'block' : 'none')};
@@ -99,12 +68,57 @@ function GridModal() {
 	const modalVisible = useSelector(state => state.grid.modalVisible);
 	const modalOffset = useSelector(state => state.grid.modalOffset);
 	const selectedCells = useSelector(state => state.grid.selectedCells);
+	const recentlySelected = useSelector(state => state.grid.recentlySelected);
+	const validCodes = /^[ABDHIMORSV]{1}$|^SN$|^ST$|^SW$|^NM$|^GT$|^AW$|^ES$/;
 	const dispatch = useDispatch();
 
 	function clearModal() {
 		dispatch(toggleModal(false));
 		dispatch(updateSelectedCells([]));
 	}
+
+	let modalHide;
+
+	function gridInputHandler(e, value = e.key?.toUpperCase() || e.target.textContent) {
+		if (modalHide) window.clearTimeout(modalHide);
+		if (!value.match(validCodes)) return;
+
+		if (selectedCells.length) {
+			const newData = selectedCells.reduce((dataset, cell) => {
+				if (!dataset[cell.unitName]) dataset[cell.unitName] = {};
+				dataset[cell.unitName][cell.timestamp] = {
+					value,
+					user: 'gavinasay',
+					inputTime: dayjs().format('HH:mm:ss.SSS'),
+				};
+				return dataset;
+			}, {});
+
+			dispatch(updateData(newData));
+			dispatch(shiftToRecent());
+		} else {
+			const revisedData = recentlySelected.reduce((dataset, cell) => {
+				if (!dataset[cell.unitName]) dataset[cell.unitName] = {};
+				dataset[cell.unitName][cell.timestamp] = {
+					value,
+					user: 'gavinasay',
+					inputTime: dayjs().format('HH:mm:ss.SSS'),
+				};
+				return dataset;
+			}, {});
+
+			dispatch(updateData(revisedData));
+		}
+
+		window.modalHide = setTimeout(() => {
+			dispatch(updateRecentlySelected([]));
+			dispatch(toggleModal(false));
+		}, 5000);
+	}
+
+	// useEffect(() => {
+	// 	window.clearTimeout(modalHide);
+	// }, [modalOffset, modalVisible, modalHide]);
 
 	return (
 		<ModalFrame modalVisible={modalVisible} modalOffset={modalOffset}>
@@ -113,7 +127,7 @@ function GridModal() {
 			</button>
 			<InputModal modalVisible={modalVisible} modalOffset={modalOffset}>
 				<div className='modal-info'></div>
-				<div className='modal-body'>
+				<div className='modal-body' onClick={gridInputHandler}>
 					<Selector value='S'>S</Selector>
 					<Selector value='A'>A</Selector>
 					<Selector value='R'>R</Selector>

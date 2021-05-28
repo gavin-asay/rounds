@@ -15,6 +15,10 @@ export const gridSlice = createSlice({
 			const sorted = action.payload.sort((a, b) => b.left - a.left);
 			if (sorted.length) state.modalOffset = [sorted[0].top, sorted[0].left];
 		},
+		shiftToRecent: state => {
+			state.recentlySelected = state.selectedCells;
+			state.selectedCells = [];
+		},
 		updateRecentlySelected: (state, action) => {
 			state.recentlySelected = action.payload;
 		},
@@ -30,7 +34,13 @@ export const gridSlice = createSlice({
 	},
 });
 
-export const { updateSelectedCells, updateRecentlySelected, toggleDeselectMode, toggleModal, updateModalOffset } =
-	gridSlice.actions;
+export const {
+	updateSelectedCells,
+	shiftToRecent,
+	updateRecentlySelected,
+	toggleDeselectMode,
+	toggleModal,
+	updateModalOffset,
+} = gridSlice.actions;
 
 export default gridSlice.reducer;

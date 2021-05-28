@@ -8,7 +8,11 @@ export const unitSlice = createSlice({
 			name: 'Unit 01',
 			location: 1,
 			data: {
-				2200: 'S',
+				2200: {
+					value: 'S',
+					user: 'gavinasay',
+					inputTime: '',
+				},
 			},
 		},
 		{
@@ -23,11 +27,16 @@ export const unitSlice = createSlice({
 			state.find(unit => unit.id === action.payload.id).location = action.payload.location;
 		},
 		updateData: (state, action) => {
-			state.find(unit => unit.id === action.payload.id).data = { ...state.data, ...action.payload };
+			const newData = Object.entries(action.payload);
+			newData.forEach(data => {
+				const unit = state.find(item => item.name.replace(' ', '') === data[0]);
+				console.log(unit);
+				unit.data = Object.assign(unit.data, data[1]);
+			});
 		},
 	},
 });
 
-export const { setShift, setArea } = unitSlice.actions;
+export const { updateLocation, updateData } = unitSlice.actions;
 
 export default unitSlice.reducer;

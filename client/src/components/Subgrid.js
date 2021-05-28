@@ -1,19 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 import { useSelector, useDispatch } from 'react-redux';
-import {
-	updateSelectedCells,
-	updateRecentlySelected,
-	toggleDeselectMode,
-	toggleModal,
-	updateModalOffset,
-} from '../utils/gridReducer';
+import { updateSelectedCells, updateRecentlySelected, toggleDeselectMode, toggleModal } from '../utils/gridReducer';
+// import { updateData } from '../utils/unitReducer';
 
 import GridModal from './GridModal';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { modalColor } from '../utils/helpers';
 
 dayjs.extend(customParseFormat);
 
@@ -39,29 +35,34 @@ const StyledSubgrid = styled.section`
 	position: relative;
 	${({ checks }) => `grid-template-columns: repeat(${checks}, 35px);`}
 	grid-template-rows: 100px repeat(10, 35px);
+`;
 
-	.grid-item {
-		text-align: center;
-		height: 100%;
-		width: 100%;
-		font-size: 16px;
-		font-weight: bold;
-		background-color: #282828;
-		border: 0.5px solid black;
-		box-sizing: border-box;
-		cursor: pointer;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		border-radius: 5px;
-	}
+const GridItem = styled.div`
+	text-align: center;
+	height: 100%;
+	width: 100%;
+	font-size: 16px;
+	font-weight: bold;
+	background-color: #282828;
+	border: 0.5px solid black;
+	box-sizing: border-box;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 5px;
+	color: ${props => modalColor(props)};
 
-	.grid-item:hover {
+	&:hover {
 		border: white 2px dotted;
 	}
 
-	.selected {
+	&.selected {
 		border: yellow 2px dashed;
+	}
+
+	&.selected:hover {
+		border: rgb(245, 199, 26) 1px dashed;
 	}
 `;
 
@@ -72,11 +73,10 @@ function Subgrid() {
 	const modalVisible = useSelector(state => state.modalVisible);
 	const deselectMode = useSelector(state => state.grid.deselectMode);
 	const selectedCells = useSelector(state => state.grid.selectedCells);
+	const recentlySelected = useSelector(state => state.grid.recentlySelected);
 	const dispatch = useDispatch();
 
 	let timestamps = [];
-
-	const [recentlySelected, setRecentlySelected] = useState([]);
 
 	let i = 0;
 	while (true) {
@@ -92,11 +92,9 @@ function Subgrid() {
 	function gridSelectorMouse(e) {
 		e.preventDefault();
 		if (e.buttons !== 1 || !e.target.classList.contains('grid-item')) return;
-		console.log(e.target);
-		if (modalVisible) {
-			window.clearTimeout(modalVisible);
-			recentlySelected.forEach(el => el.classList.remove('selected'));
-			setRecentlySelected([]);
+		if (recentlySelected.length) {
+			window.clearTimeout(window.modalHide);
+			dispatch(updateRecentlySelected([]));
 		}
 
 		const { unitName, timestamp } = e.target.dataset;
@@ -122,7 +120,7 @@ function Subgrid() {
 		if (modalVisible) return;
 		dispatch(toggleDeselectMode(false));
 		dispatch(toggleModal(true));
-		if (!selectedCells.length) {
+		if (!selectedCells.length && !recentlySelected.length) {
 			dispatch(toggleModal(false));
 			return;
 		}
@@ -144,16 +142,19 @@ function Subgrid() {
 				for (let i = 0; i < timestamps.length; i++) {
 					const nameCode = name.replace(' ', '');
 					cells.push(
-						<div
+						<GridItem
 							key={`${nameCode}-${timestamps[i]}`}
-							className={`grid-item ${data[timestamps[i]]} ${
-								selectedCells.find(cell => cell.unitName === nameCode && cell.timestamp === timestamps[i]) && 'selected'
+							className={`grid-item ${
+								(selectedCells.find(cell => cell.unitName === nameCode && cell.timestamp === timestamps[i]) ||
+									recentlySelected.find(cell => cell.unitName === nameCode && cell.timestamp === timestamps[i])) &&
+								'selected'
 							}`}
 							data-unit-name={nameCode}
 							data-timestamp={timestamps[i]}
+							value={data?.[timestamps[i]]?.value}
 						>
-							{data?.[timestamps[i]]}
-						</div>
+							{data?.[timestamps[i]]?.value}
+						</GridItem>
 					);
 				}
 				return cells;
