@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { useSelector, useDispatch } from 'react-redux';
@@ -10,12 +10,10 @@ import dayjs from 'dayjs';
 import { modalColor } from '../utils/helpers';
 
 const ModalFrame = styled.div`
-	display: ${props => (props.modalVisible ? 'block' : 'none')};
 	width: max-content;
 	position: absolute;
 	box-sizing: border-box;
-	${({ modalVisible, modalOffset }) =>
-		modalVisible &&
+	${({ modalOffset }) =>
 		`top: ${modalOffset[0]}px;
 		left: ${modalOffset[1]}px;`}
 
@@ -44,6 +42,10 @@ const InputModal = styled.div`
 		grid-template-columns: 35px 35px;
 		grid-auto-rows: 35px;
 	}
+
+	#key-input {
+		display: none;
+	}
 `;
 
 const Selector = styled.button`
@@ -71,6 +73,9 @@ function GridModal() {
 	const recentlySelected = useSelector(state => state.grid.recentlySelected);
 	const validCodes = /^[ABDHIMORSV]{1}$|^SN$|^ST$|^SW$|^NM$|^GT$|^AW$|^ES$/;
 	const dispatch = useDispatch();
+
+	const hiddenInput = useRef(null);
+	let [keyInput, setKeyInput] = useState('');
 
 	function clearModal() {
 		dispatch(toggleModal(false));
@@ -116,17 +121,43 @@ function GridModal() {
 		}, 5000);
 	}
 
+	function keydownHandler(e) {
+		if (!selectedCells.length && !recentlySelected.length) return;
+		if (e.metaKey || e.ctrlKey) return;
+
+		if (e.key.toUpperCase() === 'N') setKeyInput('NM');
+
+		if (keyInput.length === 0 && e.key.toUpperCase().match(validCodes)) setKeyInput(e.key.toUpperCase());
+		else if (keyInput.length === 1 && (keyInput + e.key.toUpperCase()).match(validCodes))
+			setKeyInput((keyInput += e.key.toUpperCase()));
+		else if (keyInput.length === 2 && e.key.toUpperCase().match(validCodes)) {
+			setKeyInput(e.key.toUpperCase());
+		}
+
+		window.clearTimeout(window.modalHide);
+		gridInputHandler(e, keyInput);
+	}
+
 	// useEffect(() => {
-	// 	window.clearTimeout(modalHide);
-	// }, [modalOffset, modalVisible, modalHide]);
+	// 	if (modalVisible) hiddenInput.current.focus({ preventScroll: true });
+	// }, [modalVisible]);
+
+	// useEffect(() => {
+	// 	document.addEventListener('keydown', e => {
+	// 		if (modalVisible && !document.activeElement.id !== 'key-input')
+	// 			hiddenInput.current.focus({ preventScroll: true });
+	// 	});
+	// }, [modalVisible]);
 
 	return (
-		<ModalFrame modalVisible={modalVisible} modalOffset={modalOffset}>
+		<ModalFrame modalOffset={modalOffset}>
 			<button className='close' onClick={clearModal}>
 				X
 			</button>
-			<InputModal modalVisible={modalVisible} modalOffset={modalOffset}>
-				<div className='modal-info'></div>
+			<InputModal>
+				<div className='modal-info'>
+					<input id='key-input' ref={hiddenInput} value={keyInput} onKeyDown={keydownHandler} />
+				</div>
 				<div className='modal-body' onClick={gridInputHandler}>
 					<Selector value='S'>S</Selector>
 					<Selector value='A'>A</Selector>

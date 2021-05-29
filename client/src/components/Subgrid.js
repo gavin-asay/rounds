@@ -136,7 +136,7 @@ function Subgrid() {
 			{timestamps.map(time => (
 				<GridTimestamp key={time}>{time}</GridTimestamp>
 			))}
-			<GridModal />
+			{modalVisible && <GridModal />}
 			{units.map(({ name, data }) => {
 				const cells = [];
 				for (let i = 0; i < timestamps.length; i++) {
