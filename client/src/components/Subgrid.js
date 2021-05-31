@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { updateSelectedCells, updateRecentlySelected, toggleDeselectMode, toggleModal } from '../utils/gridReducer';
-// import { updateData } from '../utils/unitReducer';
 
 import GridModal from './GridModal';
 
@@ -70,8 +69,8 @@ function Subgrid() {
 	const shiftStart = useSelector(state => state.config.shiftStart);
 	const shiftEnd = useSelector(state => state.config.shiftEnd);
 	const units = useSelector(state => state.units);
-	const modalVisible = useSelector(state => state.modalVisible);
-	const deselectMode = useSelector(state => state.grid.deselectMode);
+	const modalVisible = useSelector(state => state.grid.modalVisible);
+	// const deselectMode = useSelector(state => state.grid.deselectMode);
 	const selectedCells = useSelector(state => state.grid.selectedCells);
 	const recentlySelected = useSelector(state => state.grid.recentlySelected);
 	const dispatch = useDispatch();
@@ -100,11 +99,17 @@ function Subgrid() {
 		const { unitName, timestamp } = e.target.dataset;
 		const isSelected = selectedCells.find(cell => cell.unitName === unitName && cell.timestamp === timestamp);
 
-		if (isSelected && deselectMode) {
-			dispatch(updateSelectedCells(selectedCells.splice(selectedCells.indexOf([unitName, timestamp]), 1)));
-		} else if (!isSelected && !deselectMode) {
+		if (isSelected) {
+			dispatch(toggleDeselectMode(true));
+			dispatch(
+				updateSelectedCells(
+					selectedCells.filter(cell => (cell !== cell.unitName) !== unitName && cell.timestamp !== timestamp)
+				)
+			);
+		} else {
+			dispatch(toggleDeselectMode(false));
 			const rect = e.target.getBoundingClientRect();
-			const left = window.innerWidth - rect.right < 350 ? e.target.offsetLeft - 165 : e.target.offsetLeft + 65;
+			const left = window.innerWidth - rect.right < 350 ? e.target.offsetLeft - 165 : e.target.offsetLeft + 110;
 			const top = e.target.offsetTop - 50;
 			dispatch(updateSelectedCells([...selectedCells, { unitName, timestamp, left, top }]));
 		}
@@ -133,10 +138,10 @@ function Subgrid() {
 			onMouseOver={gridSelectorMouse}
 			onMouseUp={renderInputModal}
 		>
+			{modalVisible && <GridModal />}
 			{timestamps.map(time => (
 				<GridTimestamp key={time}>{time}</GridTimestamp>
 			))}
-			{modalVisible && <GridModal />}
 			{units.map(({ name, data }) => {
 				const cells = [];
 				for (let i = 0; i < timestamps.length; i++) {

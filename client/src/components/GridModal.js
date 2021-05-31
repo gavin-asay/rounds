@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { useSelector, useDispatch } from 'react-redux';
@@ -9,7 +9,50 @@ import dayjs from 'dayjs';
 
 import { modalColor } from '../utils/helpers';
 
+let keyInput = '';
+function useKeydown(validCodes, modalVisible, cb) {
+	// using event listeners on document is tricky
+	// you run the risk of adding a duplicate listener on every re-render, and you get huge slowdowns
+	const callbackRef = useRef(cb);
+
+	useEffect(() => {
+		// refresh the callback to avoid stale data
+		callbackRef.current = cb;
+	}, [cb]);
+
+	useEffect(() => {
+		function keyCheck(e) {
+			if (!modalVisible) return;
+			if (e.metaKey || e.ctrlKey) return;
+
+			if (e.key === 'Backspace' || e.key === 'Delete') {
+				window.clearTimeout(window.modalHide);
+				cb(e, e.key);
+			}
+
+			// we check a handful of cases and evaluate the validity of recent input across multiple event firings
+			if (keyInput.length === 0 && validCodes.test(e.key.toUpperCase())) keyInput += e.key.toUpperCase();
+			else if (keyInput.length === 1 && validCodes.test(keyInput + e.key.toUpperCase()))
+				keyInput += e.key.toUpperCase();
+			else if (keyInput.length === 1 && !validCodes.test(keyInput + e.key.toUpperCase()))
+				keyInput = e.key.toUpperCase();
+			else if (keyInput.length === 2 && validCodes.test(e.key.toUpperCase())) {
+				keyInput = '';
+				keyInput += e.key.toUpperCase();
+			}
+
+			window.clearTimeout(window.modalHide);
+			// later we'll see that cb is gridInputHandler(), which also handles click events on the modal
+			cb(e, keyInput);
+		}
+
+		document.addEventListener('keydown', keyCheck);
+		return () => document.removeEventListener('keydown', keyCheck);
+	});
+}
+
 const ModalFrame = styled.div`
+	/* display: ${props => (props.modalVisible ? 'block' : 'none')}; */
 	width: max-content;
 	position: absolute;
 	box-sizing: border-box;
@@ -42,10 +85,6 @@ const InputModal = styled.div`
 		grid-template-columns: 35px 35px;
 		grid-auto-rows: 35px;
 	}
-
-	#key-input {
-		display: none;
-	}
 `;
 
 const Selector = styled.button`
@@ -74,18 +113,17 @@ function GridModal() {
 	const validCodes = /^[ABDHIMORSV]{1}$|^SN$|^ST$|^SW$|^NM$|^GT$|^AW$|^ES$/;
 	const dispatch = useDispatch();
 
-	const hiddenInput = useRef(null);
-	let [keyInput, setKeyInput] = useState('');
+	// const hiddenInput = useRef(null);
+	// let [keyInput, setKeyInput] = useState('');
 
 	function clearModal() {
 		dispatch(toggleModal(false));
 		dispatch(updateSelectedCells([]));
 	}
 
-	let modalHide;
-
-	function gridInputHandler(e, value = e.key?.toUpperCase() || e.target.textContent) {
-		if (modalHide) window.clearTimeout(modalHide);
+	function gridInputHandler(e, value = e.target.textContent) {
+		console.log(e);
+		if (window.modalHide) window.clearTimeout(window.modalHide);
 		if (!value.match(validCodes)) return;
 
 		if (selectedCells.length) {
@@ -121,43 +159,15 @@ function GridModal() {
 		}, 5000);
 	}
 
-	function keydownHandler(e) {
-		if (!selectedCells.length && !recentlySelected.length) return;
-		if (e.metaKey || e.ctrlKey) return;
-
-		if (e.key.toUpperCase() === 'N') setKeyInput('NM');
-
-		if (keyInput.length === 0 && e.key.toUpperCase().match(validCodes)) setKeyInput(e.key.toUpperCase());
-		else if (keyInput.length === 1 && (keyInput + e.key.toUpperCase()).match(validCodes))
-			setKeyInput((keyInput += e.key.toUpperCase()));
-		else if (keyInput.length === 2 && e.key.toUpperCase().match(validCodes)) {
-			setKeyInput(e.key.toUpperCase());
-		}
-
-		window.clearTimeout(window.modalHide);
-		gridInputHandler(e, keyInput);
-	}
-
-	// useEffect(() => {
-	// 	if (modalVisible) hiddenInput.current.focus({ preventScroll: true });
-	// }, [modalVisible]);
-
-	// useEffect(() => {
-	// 	document.addEventListener('keydown', e => {
-	// 		if (modalVisible && !document.activeElement.id !== 'key-input')
-	// 			hiddenInput.current.focus({ preventScroll: true });
-	// 	});
-	// }, [modalVisible]);
+	useKeydown(validCodes, modalVisible, gridInputHandler);
 
 	return (
-		<ModalFrame modalOffset={modalOffset}>
+		<ModalFrame modalOffset={modalOffset} modalVisible={modalVisible}>
 			<button className='close' onClick={clearModal}>
 				X
 			</button>
 			<InputModal>
-				<div className='modal-info'>
-					<input id='key-input' ref={hiddenInput} value={keyInput} onKeyDown={keydownHandler} />
-				</div>
+				<div className='modal-info'></div>
 				<div className='modal-body' onClick={gridInputHandler}>
 					<Selector value='S'>S</Selector>
 					<Selector value='A'>A</Selector>
