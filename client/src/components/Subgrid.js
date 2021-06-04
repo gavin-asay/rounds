@@ -17,9 +17,28 @@ const GridTimestamp = styled.div`
 	border: 0.5px solid black;
 	writing-mode: vertical-lr;
 	text-align: center;
-	font-size: 1.5em;
+	font-size: 1.5rem;
 	height: 100%;
-	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+
+	div {
+		height: min-content;
+		width: min-content;
+		margin-top: 0.5rem;
+	}
+
+	p {
+		margin: 0;
+		writing-mode: initial;
+		/* width: 100%; */
+		/* height: min-content; */
+		text-align: center;
+		margin: 0 auto;
+	}
 `;
 
 const StyledSubgrid = styled.section`
@@ -70,7 +89,7 @@ function Subgrid() {
 	const shiftEnd = useSelector(state => state.config.shiftEnd);
 	const units = useSelector(state => state.units);
 	const modalVisible = useSelector(state => state.grid.modalVisible);
-	// const deselectMode = useSelector(state => state.grid.deselectMode);
+	const deselectMode = useSelector(state => state.grid.deselectMode);
 	const selectedCells = useSelector(state => state.grid.selectedCells);
 	const recentlySelected = useSelector(state => state.grid.recentlySelected);
 	const dispatch = useDispatch();
@@ -115,10 +134,45 @@ function Subgrid() {
 		}
 	}
 
+	function gridSelectorTouch(e) {
+		if (e.touches.length !== 1 || !e.target.classList.contains('grid-item')) return;
+		if (e.target.classList.contains('grid-item')) e.preventDefault();
+
+		if (window.modalHide) {
+			window.clearTimeout(window.modalHide);
+			dispatch(updateRecentlySelected([]));
+		}
+		// define target to get the actual position/element under finger
+		const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+		const { unitName, timestamp } = target.dataset;
+		const isSelected = selectedCells.find(cell => cell.unitName === unitName && cell.timestamp === timestamp);
+
+		if (isSelected && deselectMode) {
+			dispatch(
+				updateSelectedCells(
+					selectedCells.filter(cell => (cell !== cell.unitName) !== unitName && cell.timestamp !== timestamp)
+				)
+			);
+		} else if (!isSelected && !deselectMode) {
+			const rect = target.getBoundingClientRect();
+			const left = window.innerWidth - rect.right < 350 ? target.offsetLeft - 165 : target.offsetLeft + 110;
+			const top = target.offsetTop - 50;
+			dispatch(updateSelectedCells([...selectedCells, { unitName, timestamp, left, top }]));
+		}
+	}
+
 	function selectToggleMouse(e) {
 		e.preventDefault();
 		if (e.target.classList.contains('selected')) dispatch(toggleDeselectMode(true));
 		gridSelectorMouse(e);
+	}
+
+	function selectToggleTouch(e) {
+		if (!e.target.classList.contains('grid-item') || e.touches.length > 1) return;
+		e.preventDefault();
+		if (document.elementsFromPoint(e.clientX, e.clientY).classList.contains('selected'))
+			dispatch(toggleDeselectMode(true));
+		gridSelectorTouch(e);
 	}
 
 	function renderInputModal() {
@@ -131,39 +185,57 @@ function Subgrid() {
 		}
 	}
 
+	function renderDropdown(e) {
+		const drop = e.target.dataset.drop.split('-');
+		if (/^\d+$/.test(drop[1])) {
+		} else if (/^\w+$/.test(drop[1])) {
+		}
+	}
+
+	const dataCells = units.map(({ name, data }) => {
+		const cells = [];
+		for (let i = 0; i < timestamps.length; i++) {
+			const nameCode = name.replace(' ', '');
+			cells.push(
+				<GridItem
+					key={`${nameCode}-${timestamps[i]}`}
+					className={`grid-item ${
+						(selectedCells.find(cell => cell.unitName === nameCode && cell.timestamp === timestamps[i]) ||
+							recentlySelected.find(cell => cell.unitName === nameCode && cell.timestamp === timestamps[i])) &&
+						'selected'
+					}`}
+					data-unit-name={nameCode}
+					data-timestamp={timestamps[i]}
+					value={data?.[timestamps[i]]?.value}
+				>
+					{data?.[timestamps[i]]?.value}
+				</GridItem>
+			);
+		}
+		return cells;
+	});
+
 	return (
 		<StyledSubgrid
 			checks={timestamps.length}
 			onMouseDown={selectToggleMouse}
 			onMouseOver={gridSelectorMouse}
 			onMouseUp={renderInputModal}
+			onTouchStart={selectToggleTouch}
+			onTouchMove={gridSelectorTouch}
+			onTouchEnd={renderInputModal}
+			onClick={renderDropdown}
 		>
 			{modalVisible && <GridModal />}
 			{timestamps.map(time => (
-				<GridTimestamp key={time}>{time}</GridTimestamp>
+				<GridTimestamp key={time}>
+					<div>{time}</div>
+					<p className='material-icons' data-drop={`drop-${time}`}>
+						arrow_drop_down
+					</p>
+				</GridTimestamp>
 			))}
-			{units.map(({ name, data }) => {
-				const cells = [];
-				for (let i = 0; i < timestamps.length; i++) {
-					const nameCode = name.replace(' ', '');
-					cells.push(
-						<GridItem
-							key={`${nameCode}-${timestamps[i]}`}
-							className={`grid-item ${
-								(selectedCells.find(cell => cell.unitName === nameCode && cell.timestamp === timestamps[i]) ||
-									recentlySelected.find(cell => cell.unitName === nameCode && cell.timestamp === timestamps[i])) &&
-								'selected'
-							}`}
-							data-unit-name={nameCode}
-							data-timestamp={timestamps[i]}
-							value={data?.[timestamps[i]]?.value}
-						>
-							{data?.[timestamps[i]]?.value}
-						</GridItem>
-					);
-				}
-				return cells;
-			})}
+			{dataCells}
 		</StyledSubgrid>
 	);
 }

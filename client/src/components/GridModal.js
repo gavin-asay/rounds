@@ -44,15 +44,16 @@ function useKeydown(validCodes, modalVisible, cb) {
 			window.clearTimeout(window.modalHide);
 			// later we'll see that cb is gridInputHandler(), which also handles click events on the modal
 			cb(e, keyInput);
-		}
-
+		} // listener is added when this component is mounted/rendered
 		document.addEventListener('keydown', keyCheck);
-		return () => document.removeEventListener('keydown', keyCheck);
+		// listener is removed when this component is unmounted/unrendered
+		return () => {
+			document.removeEventListener('keydown', keyCheck);
+		};
 	});
 }
 
 const ModalFrame = styled.div`
-	/* display: ${props => (props.modalVisible ? 'block' : 'none')}; */
 	width: max-content;
 	position: absolute;
 	box-sizing: border-box;
@@ -156,6 +157,7 @@ function GridModal() {
 		window.modalHide = setTimeout(() => {
 			dispatch(updateRecentlySelected([]));
 			dispatch(toggleModal(false));
+			keyInput = '';
 		}, 5000);
 	}
 

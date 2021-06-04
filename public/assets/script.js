@@ -180,7 +180,7 @@ function selectToggleMouse(e) {
 }
 
 function selectToggleTouch(e) {
-	if (!e.target.classList.contains('grid-item') || e.touches.length === 2) return;
+	if (!e.target.classList.contains('grid-item') || e.touches.length !== 1) return;
 	e.preventDefault();
 	if (document.elementsFromPoint(e.clientX, e.clientY).classList.contains('selected')) deselectMode = true;
 	gridSelectorTouch(e);
