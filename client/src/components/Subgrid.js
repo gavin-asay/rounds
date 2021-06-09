@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { updateSelectedCells, updateRecentlySelected, toggleDeselectMode, toggleModal } from '../utils/gridReducer';
+import {
+	updateSelectedCells,
+	updateRecentlySelected,
+	toggleDeselectMode,
+	toggleModal,
+	toggleDropdown,
+	updateDropdownOffset,
+	updateModalOffset,
+} from '../utils/gridReducer';
 
 import GridModal from './GridModal';
 
@@ -34,10 +42,9 @@ const GridTimestamp = styled.div`
 	p {
 		margin: 0;
 		writing-mode: initial;
-		/* width: 100%; */
-		/* height: min-content; */
 		text-align: center;
 		margin: 0 auto;
+		cursor: pointer;
 	}
 `;
 
@@ -92,6 +99,7 @@ function Subgrid() {
 	const deselectMode = useSelector(state => state.grid.deselectMode);
 	const selectedCells = useSelector(state => state.grid.selectedCells);
 	const recentlySelected = useSelector(state => state.grid.recentlySelected);
+	const dropdownVisible = useSelector(state => state.grid.dropdownVisible);
 	const dispatch = useDispatch();
 
 	let timestamps = [];
@@ -121,16 +129,15 @@ function Subgrid() {
 		if (isSelected) {
 			dispatch(toggleDeselectMode(true));
 			dispatch(
-				updateSelectedCells(
-					selectedCells.filter(cell => (cell !== cell.unitName) !== unitName && cell.timestamp !== timestamp)
-				)
+				updateSelectedCells(selectedCells.filter(cell => cell.timestamp !== timestamp || cell.unitName !== unitName))
 			);
 		} else {
-			dispatch(toggleDeselectMode(false));
 			const rect = e.target.getBoundingClientRect();
 			const left = window.innerWidth - rect.right < 350 ? e.target.offsetLeft - 165 : e.target.offsetLeft + 110;
 			const top = e.target.offsetTop - 50;
+
 			dispatch(updateSelectedCells([...selectedCells, { unitName, timestamp, left, top }]));
+			dispatch(toggleDeselectMode(false));
 		}
 	}
 
@@ -149,9 +156,7 @@ function Subgrid() {
 
 		if (isSelected && deselectMode) {
 			dispatch(
-				updateSelectedCells(
-					selectedCells.filter(cell => (cell !== cell.unitName) !== unitName && cell.timestamp !== timestamp)
-				)
+				updateSelectedCells(selectedCells.filter(cell => cell.unitName !== unitName && cell.timestamp !== timestamp))
 			);
 		} else if (!isSelected && !deselectMode) {
 			const rect = target.getBoundingClientRect();
@@ -175,8 +180,8 @@ function Subgrid() {
 		gridSelectorTouch(e);
 	}
 
-	function renderInputModal() {
-		if (modalVisible) return;
+	function renderInputModal(e) {
+		if (modalVisible || e.target.dataset.drop) return;
 		dispatch(toggleDeselectMode(false));
 		dispatch(toggleModal(true));
 		if (!selectedCells.length && !recentlySelected.length) {
@@ -186,11 +191,45 @@ function Subgrid() {
 	}
 
 	function renderDropdown(e) {
-		const drop = e.target.dataset.drop.split('-');
-		if (/^\d+$/.test(drop[1])) {
-		} else if (/^\w+$/.test(drop[1])) {
+		const drop = e.target.dataset?.drop;
+		if (drop) {
+			const rect = e.target.parentElement.getBoundingClientRect();
+			const left =
+				window.innerWidth - rect.right < 350
+					? e.target.parentElement.offsetLeft - 165
+					: e.target.parentElement.offsetLeft + 110;
+			const timeColumn = dataCells
+				.flat()
+				.filter(
+					cell =>
+						cell.props['data-timestamp'] === drop &&
+						!selectedCells.find(
+							selectedCell =>
+								selectedCell.unitName === cell.props['data-unit-name'] &&
+								selectedCell.timestamp === cell.props['data-timestamp']
+						)
+				)
+				.map((cell, i) => {
+					return {
+						unitName: cell.props['data-unit-name'],
+						timestamp: cell.props['data-timestamp'],
+						top: 35 * i + rect.bottom,
+						left,
+					};
+				});
+			dispatch(updateSelectedCells([...selectedCells, ...timeColumn]));
 		}
 	}
+
+	useEffect(() => {
+		if (selectedCells.length) {
+			const sorted = [...selectedCells].sort((a, b) => b.left - a.left);
+			dispatch(updateModalOffset([sorted[0].top, sorted[0].left]));
+			dispatch(toggleModal(true));
+		} else {
+			dispatch(toggleModal(false));
+		}
+	}, [selectedCells, dispatch]);
 
 	const dataCells = units.map(({ name, data }) => {
 		const cells = [];
@@ -220,7 +259,6 @@ function Subgrid() {
 			checks={timestamps.length}
 			onMouseDown={selectToggleMouse}
 			onMouseOver={gridSelectorMouse}
-			onMouseUp={renderInputModal}
 			onTouchStart={selectToggleTouch}
 			onTouchMove={gridSelectorTouch}
 			onTouchEnd={renderInputModal}
@@ -230,7 +268,7 @@ function Subgrid() {
 			{timestamps.map(time => (
 				<GridTimestamp key={time}>
 					<div>{time}</div>
-					<p className='material-icons' data-drop={`drop-${time}`}>
+					<p className='material-icons' data-drop={`${time}`}>
 						arrow_drop_down
 					</p>
 				</GridTimestamp>

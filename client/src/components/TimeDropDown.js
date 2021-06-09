@@ -12,7 +12,7 @@ function TimeDropDown() {
 
 	return (
 		<div>
-			<p>Repeat last check</p>
+			<p onClick={repeat}>Repeat last check</p>
 		</div>
 	);
 }
