@@ -7,12 +7,13 @@ import {
 	updateRecentlySelected,
 	toggleDeselectMode,
 	toggleModal,
-	toggleDropdown,
-	updateDropdownOffset,
+	updateDropdownTime,
+	updateTimeDropdownOffset,
 	updateModalOffset,
 } from '../utils/gridReducer';
 
 import GridModal from './GridModal';
+import TimeDropdown from './TimeDropDown';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -99,7 +100,7 @@ function Subgrid() {
 	const deselectMode = useSelector(state => state.grid.deselectMode);
 	const selectedCells = useSelector(state => state.grid.selectedCells);
 	const recentlySelected = useSelector(state => state.grid.recentlySelected);
-	const dropdownVisible = useSelector(state => state.grid.dropdownVisible);
+	const dropdownTime = useSelector(state => state.grid.dropdownTime);
 	const dispatch = useDispatch();
 
 	let timestamps = [];
@@ -190,7 +191,7 @@ function Subgrid() {
 		}
 	}
 
-	function renderDropdown(e) {
+	function renderTimeDropdown(e) {
 		const drop = e.target.dataset?.drop;
 		if (drop) {
 			const rect = e.target.parentElement.getBoundingClientRect();
@@ -200,36 +201,34 @@ function Subgrid() {
 					: e.target.parentElement.offsetLeft + 110;
 			const timeColumn = dataCells
 				.flat()
-				.filter(
-					cell =>
-						cell.props['data-timestamp'] === drop &&
-						!selectedCells.find(
-							selectedCell =>
-								selectedCell.unitName === cell.props['data-unit-name'] &&
-								selectedCell.timestamp === cell.props['data-timestamp']
-						)
-				)
+				.filter(cell => cell.props['data-timestamp'] === drop)
 				.map((cell, i) => {
 					return {
 						unitName: cell.props['data-unit-name'],
 						timestamp: cell.props['data-timestamp'],
-						top: 35 * i + rect.bottom,
+						top: Math.round(35),
 						left,
 					};
 				});
-			dispatch(updateSelectedCells([...selectedCells, ...timeColumn]));
+
+			console.log(e.target.offsetLeft);
+			dispatch(updateSelectedCells([...timeColumn]));
+			dispatch(updateTimeDropdownOffset([0, e.target.offsetLeft + 100]));
+			dispatch(updateDropdownTime(drop));
 		}
 	}
 
 	useEffect(() => {
-		if (selectedCells.length) {
+		if (selectedCells.length || recentlySelected.length) {
 			const sorted = [...selectedCells].sort((a, b) => b.left - a.left);
 			dispatch(updateModalOffset([sorted[0].top, sorted[0].left]));
 			dispatch(toggleModal(true));
 		} else {
 			dispatch(toggleModal(false));
 		}
-	}, [selectedCells, dispatch]);
+
+		if (!selectedCells.every(cell => cell.timestamp === selectedCells[0].timestamp)) dispatch(updateDropdownTime(''));
+	}, [selectedCells, recentlySelected, dispatch]);
 
 	const dataCells = units.map(({ name, data }) => {
 		const cells = [];
@@ -262,8 +261,9 @@ function Subgrid() {
 			onTouchStart={selectToggleTouch}
 			onTouchMove={gridSelectorTouch}
 			onTouchEnd={renderInputModal}
-			onClick={renderDropdown}
+			onClick={renderTimeDropdown}
 		>
+			{dropdownTime && <TimeDropdown />}
 			{modalVisible && <GridModal />}
 			{timestamps.map(time => (
 				<GridTimestamp key={time}>

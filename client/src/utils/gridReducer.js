@@ -8,8 +8,8 @@ export const gridSlice = createSlice({
 		deselectMode: false,
 		modalVisible: false,
 		modalOffset: [0, 0],
-		dropdownVisible: false,
-		dropdownOffset: [0, 0],
+		dropdownTime: '',
+		timeDropdownOffset: [0, 0],
 	},
 	reducers: {
 		updateSelectedCells: (state, action) => {
@@ -31,15 +31,14 @@ export const gridSlice = createSlice({
 		toggleModal: (state, action) => {
 			state.modalVisible = action.payload;
 		},
-		// maybe unnecessary
 		updateModalOffset: (state, action) => {
 			state.modalOffset = action.payload;
 		},
-		toggleDropdown: (state, action) => {
-			state.dropdownVisible = action.payload;
+		updateDropdownTime: (state, action) => {
+			state.dropdownTime = action.payload;
 		},
-		updateDropdownOffset: (state, action) => {
-			state.dropdownOffset = action.payload;
+		updateTimeDropdownOffset: (state, action) => {
+			state.timeDropdownOffset = action.payload;
 		},
 	},
 });
@@ -51,8 +50,8 @@ export const {
 	toggleDeselectMode,
 	toggleModal,
 	updateModalOffset,
-	toggleDropdown,
-	updateDropdownOffset,
+	updateDropdownTime,
+	updateTimeDropdownOffset,
 } = gridSlice.actions;
 
 export default gridSlice.reducer;
