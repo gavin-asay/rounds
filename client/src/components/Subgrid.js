@@ -142,17 +142,22 @@ function Subgrid() {
 		}
 	}
 
-	function gridSelectorTouch(e) {
-		if (e.touches.length !== 1 || !e.target.classList.contains('grid-item')) return;
-		if (e.target.classList.contains('grid-item')) e.preventDefault();
+	function gridSelectorTouch(e, realTarget) {
+		if (!realTarget)
+			realTarget = document.elementFromPoint(
+				e.nativeEvent.changedTouches[0].clientX,
+				e.nativeEvent.changedTouches[0].clientY
+			);
+
+		if (e.nativeEvent.touches.length !== 1 || !realTarget?.classList.contains('grid-item')) return;
+		e.preventDefault();
 
 		if (window.modalHide) {
 			window.clearTimeout(window.modalHide);
 			dispatch(updateRecentlySelected([]));
 		}
 		// define target to get the actual position/element under finger
-		const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-		const { unitName, timestamp } = target.dataset;
+		const { unitName, timestamp } = realTarget.dataset;
 		const isSelected = selectedCells.find(cell => cell.unitName === unitName && cell.timestamp === timestamp);
 
 		if (isSelected && deselectMode) {
@@ -160,9 +165,9 @@ function Subgrid() {
 				updateSelectedCells(selectedCells.filter(cell => cell.unitName !== unitName && cell.timestamp !== timestamp))
 			);
 		} else if (!isSelected && !deselectMode) {
-			const rect = target.getBoundingClientRect();
-			const left = window.innerWidth - rect.right < 350 ? target.offsetLeft - 165 : target.offsetLeft + 110;
-			const top = target.offsetTop - 50;
+			const rect = realTarget.getBoundingClientRect();
+			const left = window.innerWidth - rect.right < 350 ? realTarget.offsetLeft - 165 : realTarget.offsetLeft + 110;
+			const top = realTarget.offsetTop - 50;
 			dispatch(updateSelectedCells([...selectedCells, { unitName, timestamp, left, top }]));
 		}
 	}
@@ -174,11 +179,17 @@ function Subgrid() {
 	}
 
 	function selectToggleTouch(e) {
-		if (!e.target.classList.contains('grid-item') || e.touches.length > 1) return;
 		e.preventDefault();
-		if (document.elementsFromPoint(e.clientX, e.clientY).classList.contains('selected'))
-			dispatch(toggleDeselectMode(true));
-		gridSelectorTouch(e);
+		const realTarget = document.elementFromPoint(
+			e.nativeEvent.changedTouches[0].clientX,
+			e.nativeEvent.changedTouches[0].clientY
+		);
+
+		if (!realTarget.classList.contains('grid-item') || e.touches.length > 1) return;
+		console.log(e);
+
+		if (realTarget.classList.contains('selected')) dispatch(toggleDeselectMode(true));
+		gridSelectorTouch(e, realTarget);
 	}
 
 	function renderInputModal(e) {
@@ -213,18 +224,16 @@ function Subgrid() {
 
 			console.log(e.target.offsetLeft);
 			dispatch(updateSelectedCells([...timeColumn]));
-			dispatch(updateTimeDropdownOffset([0, e.target.offsetLeft + 100]));
+			dispatch(updateTimeDropdownOffset([0, e.target.offsetLeft + 29]));
 			dispatch(updateDropdownTime(drop));
 		}
 	}
 
 	useEffect(() => {
-		if (selectedCells.length || recentlySelected.length) {
+		if (selectedCells.length) {
 			const sorted = [...selectedCells].sort((a, b) => b.left - a.left);
 			dispatch(updateModalOffset([sorted[0].top, sorted[0].left]));
 			dispatch(toggleModal(true));
-		} else {
-			dispatch(toggleModal(false));
 		}
 
 		if (!selectedCells.every(cell => cell.timestamp === selectedCells[0].timestamp)) dispatch(updateDropdownTime(''));

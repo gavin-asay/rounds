@@ -30,7 +30,6 @@ export const unitSlice = createSlice({
 			const newData = Object.entries(action.payload);
 			newData.forEach(data => {
 				const unit = state.find(item => item.name.replace(' ', '') === data[0]);
-				console.log(unit);
 				unit.data = Object.assign(unit.data, data[1]);
 			});
 		},
